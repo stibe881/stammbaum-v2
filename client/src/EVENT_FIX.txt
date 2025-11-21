@@ -1,0 +1,11 @@
+    const handleMouseDown = (e) => {
+        // Only pan if clicking directly on SVG background (not on nodes/lines)
+        const tagName = e.target.tagName.toLowerCase();
+        if (tagName !== 'svg' && tagName !== 'g') {
+            return;
+        }
+        
+        setShowContextMenu(false);
+        setIsPanning(true);
+        setPanStart({ x: e.clientX - transform.x, y: e.clientX - transform.y });
+    };
