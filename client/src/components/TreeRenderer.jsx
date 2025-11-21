@@ -8,7 +8,7 @@ import './TreeRenderer.css';
 
 export default function TreeRenderer() {
     const { persons, relations, addRelation, deletePerson } = useTree();
-    const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
+    const [transform, setTransform] = useState({ x: window.innerWidth / 2, y: 100, scale: 1 });
     const [draggingNode, setDraggingNode] = useState(null);
     const [dragPos, setDragPos] = useState(null);
     const [hoveredNode, setHoveredNode] = useState(null);
@@ -57,6 +57,14 @@ export default function TreeRenderer() {
         setShowContextMenu(false);
     };
 
+    const toTreeCoords = (clientX, clientY) => {
+        const rect = svgRef.current.getBoundingClientRect();
+        return {
+            x: (clientX - rect.left - transform.x) / transform.scale,
+            y: (clientY - rect.top - transform.y) / transform.scale
+        };
+    };
+
     const handleMouseMove = (e) => {
         if (!svgRef.current) return;
 
@@ -67,15 +75,13 @@ export default function TreeRenderer() {
                 y: e.clientY - panStart.y
             }));
         } else if (draggingNode) {
-            const rect = svgRef.current.getBoundingClientRect();
-            const x = (e.clientX - rect.left - transform.x) / transform.scale;
-            const y = (e.clientY - rect.top - transform.y) / transform.scale;
-            setDragPos({ x, y });
+            const coords = toTreeCoords(e.clientX, e.clientY);
+            setDragPos(coords);
 
             const target = layout.nodes.find(n =>
                 n.id !== draggingNode.id &&
-                Math.abs(n.x - x) < 80 &&
-                Math.abs(n.y - y) < 50
+                Math.abs(n.x - coords.x) < 80 &&
+                Math.abs(n.y - coords.y) < 50
             );
             setHoveredNode(target || null);
         }
@@ -133,8 +139,8 @@ export default function TreeRenderer() {
                 onWheel={handleWheel}
             >
                 <g transform={`translate(${transform.x}, ${transform.y}) scale(${transform.scale})`}>
-                    {layout.connections.map((conn, i) => (
-                        <TreeConnection key={i} connection={conn} />
+                    {layout.links.map((link, i) => (
+                        <TreeConnection key={i} link={link} nodes={layout.nodes} />
                     ))}
 
                     {draggingNode && dragPos && (
@@ -156,6 +162,12 @@ export default function TreeRenderer() {
                     ))}
                 </g>
             </svg>
+
+            <div className="zoom-controls">
+                <button onClick={() => setTransform(v => ({ ...v, scale: v.scale * 1.2 }))}>+</button>
+                <button onClick={() => setTransform(v => ({ ...v, scale: v.scale / 1.2 }))}>-</button>
+                <button onClick={() => setTransform({ x: window.innerWidth / 2, y: 100, scale: 1 })}>Reset</button>
+            </div>
 
             {showContextMenu && (
                 <div
