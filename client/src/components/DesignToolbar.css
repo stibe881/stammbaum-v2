@@ -1,46 +1,88 @@
+/* Modern 2025 Design Toolbar */
 .design-toolbar {
     position: fixed;
-    top: 80px;
-    left: 20px;
-    background: var(--color-surface);
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    top: var(--spacing-lg);
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    gap: var(--spacing-md);
+    background: var(--glass-bg);
+    backdrop-filter: blur(30px);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: 20px;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
     z-index: 100;
-    backdrop-filter: blur(5px);
-    background: rgba(255, 255, 255, 0.8);
+    animation: slideDown var(--transition-base);
 }
 
-body.theme-modern .design-toolbar {
-    background: rgba(44, 62, 80, 0.8);
-    color: white;
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
 }
 
-.toolbar-group {
+.design-toolbar .toolbar-section {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    gap: var(--spacing-sm);
+    align-items: center;
+    padding: 0 var(--spacing-md);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.toolbar-group label {
-    font-size: 11px;
+.design-toolbar .toolbar-section:last-child {
+    border-right: none;
+}
+
+.design-toolbar label {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
     text-transform: uppercase;
-    font-weight: bold;
-    opacity: 0.7;
+    letter-spacing: 0.5px;
+    margin-right: var(--spacing-sm);
 }
 
-.toolbar-group select {
-    padding: 4px;
-    border-radius: 4px;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    background: transparent;
-    color: inherit;
+.design-toolbar select {
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    color: var(--text-primary);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
 }
 
-.toolbar-group select option {
-    background: var(--bg-color);
-    color: var(--text-color);
+.design-toolbar select:hover {
+    border-color: rgba(102, 126, 234, 0.5);
+    background: var(--bg-secondary);
+}
+
+.design-toolbar select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* Color Preview Circles */
+.color-preview {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    margin-left: var(--spacing-sm);
+    transition: transform var(--transition-fast);
+}
+
+.color-preview:hover {
+    transform: scale(1.2);
+    border-color: rgba(255, 255, 255, 0.6);
 }

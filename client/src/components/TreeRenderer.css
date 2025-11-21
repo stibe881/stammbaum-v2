@@ -1,95 +1,179 @@
+/* Modern 2025 Tree Renderer Styles */
 .tree-container {
-    width: 100%;
-    height: calc(100vh - 100px);
-    /* Adjust based on header */
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
-    background-color: transparent;
-    /* Handled by body theme */
     position: relative;
-    cursor: grab;
-}
-
-.tree-container:active {
-    cursor: grabbing;
+    background: transparent;
 }
 
 .tree-canvas {
     width: 100%;
     height: 100%;
+    cursor: grab;
 }
 
-.node-bg {
-    fill: var(--node-bg);
-    stroke: var(--node-border);
-    stroke-width: 2px;
-    filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.1));
-    transition: all 0.3s;
+.tree-canvas:active {
+    cursor: grabbing;
+}
+
+/* Modern Tree Nodes */
+.tree-node {
+    cursor: pointer;
+    transition: all var(--transition-base);
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+.tree-node .node-bg {
+    fill: url(#nodeGradient);
+    stroke: rgba(255, 255, 255, 0.3);
+    stroke-width: 2;
+    transition: all var(--transition-base);
 }
 
 .tree-node:hover .node-bg {
-    stroke: var(--accent-color);
-    cursor: pointer;
+    filter: brightness(1.2) drop-shadow(0 0 20px rgba(102, 126, 234, 0.6));
+    stroke: rgba(255, 255, 255, 0.6);
+    stroke-width: 3;
 }
 
 .tree-node.is-hovered .node-bg {
-    stroke: var(--accent-color);
-    stroke-width: 4px;
+    filter: brightness(1.3) drop-shadow(0 0 30px rgba(102, 126, 234, 0.8));
+    stroke: #667eea;
+    stroke-width: 3;
 }
 
 .tree-node.is-match .node-bg {
-    stroke: #e74c3c;
-    stroke-width: 4px;
-    fill: #fff5f5;
-    filter: drop-shadow(0 0 10px rgba(231, 76, 60, 0.5));
+    stroke: #43e97b;
+    stroke-width: 3;
+    filter: drop-shadow(0 0 20px rgba(67, 233, 123, 0.8));
+    animation: pulse 2s ease-in-out infinite;
 }
 
-.node-name {
-    font-family: var(--font-family-heading);
-    font-size: 14px;
+/* Node Text */
+.tree-node text {
+    fill: var(--text-primary);
+    font-family: var(--font-family);
     font-weight: 600;
-    fill: var(--text-color);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     pointer-events: none;
-    user-select: none;
+    transition: all var(--transition-fast);
 }
 
-.node-date {
-    font-size: 12px;
-    fill: var(--text-color);
-    opacity: 0.7;
-    pointer-events: none;
-    user-select: none;
+.tree-node:hover text {
+    fill: #ffffff;
 }
 
-.gender-dot {
-    stroke: none;
+/* Connection Lines */
+path[stroke],
+line[stroke] {
+    transition: all var(--transition-base);
 }
 
-.gender-dot.male {
-    fill: #3498db;
-}
-
-.gender-dot.female {
-    fill: #e91e63;
-}
-
-.gender-dot.other {
-    fill: #9b59b6;
-}
-
+/* Zoom Controls - Modern Glassmorphism */
 .zoom-controls {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
+    position: fixed;
+    bottom: var(--spacing-xl);
+    right: var(--spacing-xl);
     display: flex;
-    gap: 5px;
+    gap: var(--spacing-sm);
+    z-index: 100;
 }
 
 .zoom-controls button {
-    width: 30px;
-    height: 30px;
-    border: 1px solid var(--node-border);
-    background: var(--node-bg);
-    color: var(--text-color);
-    border-radius: 4px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    font-size: 20px;
     font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    box-shadow: var(--glass-shadow);
+}
+
+.zoom-controls button:hover {
+    background: var(--primary-gradient);
+    transform: scale(1.1);
+    box-shadow: var(--hover-glow);
+}
+
+.zoom-controls button:active {
+    transform: scale(0.95);
+}
+
+/* Context Menu - Modern */
+.context-menu {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(30px) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+    padding: var(--spacing-xs) !important;
+    min-width: 200px;
+    animation: fadeIn var(--transition-fast);
+}
+
+.context-menu button {
+    background: transparent !important;
+    border: none !important;
+    padding: var(--spacing-md) var(--spacing-lg) !important;
+    color: var(--text-primary) !important;
+    text-align: left !important;
+    font-family: var(--font-family) !important;
+    font-weight: 500 !important;
+    border-radius: 8px !important;
+    transition: all var(--transition-fast) !important;
+    width: 100%;
+}
+
+.context-menu button:hover {
+    background: var(--primary-gradient) !important;
+    transform: translateX(4px) !important;
+}
+
+/* Gender-based gradients for nodes */
+.tree-node.style-rectangle[data-gender="male"] .node-bg {
+    fill: url(#maleGradient);
+}
+
+.tree-node.style-rectangle[data-gender="female"] .node-bg {
+    fill: url(#femaleGradient);
+}
+
+.tree-node.style-rectangle[data-gender="other"] .node-bg {
+    fill: url(#otherGradient);
+}
+
+/* Animations */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
