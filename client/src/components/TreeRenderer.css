@@ -1,0 +1,95 @@
+.tree-container {
+    width: 100%;
+    height: calc(100vh - 100px);
+    /* Adjust based on header */
+    overflow: hidden;
+    background-color: transparent;
+    /* Handled by body theme */
+    position: relative;
+    cursor: grab;
+}
+
+.tree-container:active {
+    cursor: grabbing;
+}
+
+.tree-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.node-bg {
+    fill: var(--node-bg);
+    stroke: var(--node-border);
+    stroke-width: 2px;
+    filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.1));
+    transition: all 0.3s;
+}
+
+.tree-node:hover .node-bg {
+    stroke: var(--accent-color);
+    cursor: pointer;
+}
+
+.tree-node.is-hovered .node-bg {
+    stroke: var(--accent-color);
+    stroke-width: 4px;
+}
+
+.tree-node.is-match .node-bg {
+    stroke: #e74c3c;
+    stroke-width: 4px;
+    fill: #fff5f5;
+    filter: drop-shadow(0 0 10px rgba(231, 76, 60, 0.5));
+}
+
+.node-name {
+    font-family: var(--font-family-heading);
+    font-size: 14px;
+    font-weight: 600;
+    fill: var(--text-color);
+    pointer-events: none;
+    user-select: none;
+}
+
+.node-date {
+    font-size: 12px;
+    fill: var(--text-color);
+    opacity: 0.7;
+    pointer-events: none;
+    user-select: none;
+}
+
+.gender-dot {
+    stroke: none;
+}
+
+.gender-dot.male {
+    fill: #3498db;
+}
+
+.gender-dot.female {
+    fill: #e91e63;
+}
+
+.gender-dot.other {
+    fill: #9b59b6;
+}
+
+.zoom-controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 5px;
+}
+
+.zoom-controls button {
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--node-border);
+    background: var(--node-bg);
+    color: var(--text-color);
+    border-radius: 4px;
+    font-weight: bold;
+}

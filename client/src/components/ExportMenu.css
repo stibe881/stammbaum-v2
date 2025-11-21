@@ -1,0 +1,72 @@
+.export-menu {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--color-surface);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    backdrop-filter: blur(5px);
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+body.theme-modern .export-menu {
+    background: rgba(44, 62, 80, 0.8);
+    color: white;
+}
+
+.menu-group {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.menu-group label {
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: bold;
+    opacity: 0.7;
+    margin-right: 5px;
+}
+
+.menu-divider {
+    width: 1px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.btn-small {
+    padding: 4px 8px;
+    font-size: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.btn-small:hover {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.file-input-wrapper {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.file-input-wrapper input[type=file] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}

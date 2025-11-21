@@ -1,0 +1,49 @@
+/* Base Variables (Default/Vintage) */
+:root {
+    --bg-color: #fdfbf7;
+    --text-color: #2c3e50;
+    --node-bg: #fff;
+    --node-border: #8d6e63;
+    --line-color: #8d6e63;
+    --accent-color: #e67e22;
+}
+
+/* Vintage Theme (Paper/Ink) */
+body.theme-vintage {
+    --bg-color: #fdfbf7;
+    --text-color: #3e2723;
+    --node-bg: #fff8e1;
+    --node-border: #5d4037;
+    --line-color: #5d4037;
+    --accent-color: #ff6f00;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* Modern Theme (Clean/Dark) */
+body.theme-modern {
+    --bg-color: #1a1a1a;
+    --text-color: #ecf0f1;
+    --node-bg: #2c3e50;
+    --node-border: #34495e;
+    --line-color: #7f8c8d;
+    --accent-color: #3498db;
+    background-image: none;
+}
+
+/* Blueprint Theme */
+body.theme-blueprint {
+    --bg-color: #2980b9;
+    --text-color: #fff;
+    --node-bg: #2980b9;
+    --node-border: #fff;
+    --line-color: #fff;
+    --accent-color: #f1c40f;
+    background-image: radial-gradient(#fff 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
