@@ -18,14 +18,14 @@ function TreeApp() {
 
   return (
     <div className="app-container">
-      <DesignToolbar />
-      <ExportMenu />
-      <SearchPanel />
       <header className="app-header">
         <h1>Stammbaum Creator</h1>
         <div className="header-actions">
+          <SearchPanel />
+          <DesignToolbar />
+          <ExportMenu />
           <button className="btn-primary" onClick={() => setShowForm(true)}>
-            + Person hinzufügen
+            + Person
           </button>
         </div>
       </header>
