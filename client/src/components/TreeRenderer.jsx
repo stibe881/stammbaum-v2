@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { useTree } from '../context/TreeContext';
 import { calculateLayout } from '../utils/layout';
 import TreeNode from './TreeNode';
@@ -25,6 +25,18 @@ export default function TreeRenderer() {
     const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
     const layout = useMemo(() => calculateLayout(persons, relations), [persons, relations]);
+
+    // Zentriere Baum beim ersten Laden
+    useEffect(() => {
+        if (svgRef.current && persons.length > 0) {
+            const rect = svgRef.current.getBoundingClientRect();
+            setTransform(prev => ({
+                ...prev,
+                x: rect.width / 2,
+                y: 100
+            }));
+        }
+    }, [persons.length]);
 
     const handleNodeClick = (node, event) => {
         if (draggingNode) return;
@@ -128,14 +140,14 @@ export default function TreeRenderer() {
     };
 
     const handleMouseDown = (e) => {
-        if (e.target.closest('.tree-node')) return;
+        // Ignoriere wenn auf Node oder Line geklickt wurde
+        if (e.target.closest('.tree-node') || e.target.tagName === 'path' || e.target.tagName === 'line') return;
         setShowContextMenu(false);
         setIsPanning(true);
         setPanStart({ x: e.clientX - transform.x, y: e.clientY - transform.y });
     };
 
     const handleWheel = (e) => {
-        e.preventDefault();
         const scale = e.deltaY > 0 ? 0.9 : 1.1;
         setTransform(prev => ({ ...prev, scale: prev.scale * scale }));
     };
@@ -165,6 +177,7 @@ export default function TreeRenderer() {
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 onWheel={handleWheel}
+                style={{ touchAction: 'none' }}
             >
                 <g transform={`translate(${transform.x}, ${transform.y}) scale(${transform.scale})`}>
                     {layout.links.map((link, i) => (
