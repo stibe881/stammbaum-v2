@@ -143,9 +143,8 @@ export default function TreeRenderer() {
     };
 
     const handleMouseDown = (e) => {
-        // Don't start panning if node drag just started
-        if (isDraggingRef.current) return;
-
+        // Only start panning when clicking directly on the SVG background
+        if (e.target !== svgRef.current) return;
         setShowContextMenu(false);
         setIsPanning(true);
         setPanStart({ x: e.clientX - transform.x, y: e.clientY - transform.y });
