@@ -17,7 +17,15 @@ export default function PersonForm({ onClose }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const newPerson = await addPerson(formData);
+            // Convert empty strings to null for optional fields
+            const cleanData = {
+                ...formData,
+                birthDate: formData.birthDate || null,
+                deathDate: formData.deathDate || null,
+                bio: formData.bio || null
+            };
+
+            const newPerson = await addPerson(cleanData);
 
             // Upload photo if selected
             const fileInput = document.getElementById('photo-upload');
@@ -51,6 +59,7 @@ export default function PersonForm({ onClose }) {
                             type="text"
                             value={formData.lastName}
                             onChange={e => setFormData({ ...formData, lastName: e.target.value })}
+                            required
                         />
                     </div>
 
