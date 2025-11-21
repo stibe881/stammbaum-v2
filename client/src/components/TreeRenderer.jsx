@@ -7,67 +7,75 @@ import RelationDialog from './RelationDialog';
 import './TreeRenderer.css';
 
 export default function TreeRenderer() {
-    const { persons, relations, addRelation } = useTree();
-    const [view, setView] = useState({ x: window.innerWidth / 2, y: 100, zoom: 1 });
+    const { persons, relations, addRelation, deletePerson } = useTree();
+    const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
+    const [draggingNode, setDraggingNode] = useState(null);
+    const [dragPos, setDragPos] = useState(null);
+    const [hoveredNode, setHoveredNode] = useState(null);
+    const [showRelationDialog, setShowRelationDialog] = useState(false);
+    const [selectedRelation, setSelectedRelation] = useState(null);
+    const [selectedPerson, setSelectedPerson] = useState(null);
+    const [showContextMenu, setShowContextMenu] = useState(false);
+    const [contextMenuPos, setContextMenuPos] = useState({ x: 0, y: 0 });
 
-    // Dragging state
+    const svgRef = useRef(null);
     const [isPanning, setIsPanning] = useState(false);
     const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
-    const [draggingNode, setDraggingNode] = useState(null);
-    const [dragPos, setDragPos] = useState(null); // Current mouse pos in tree coords
-    const [hoveredNode, setHoveredNode] = useState(null);
+    const layout = useMemo(() => calculateLayout(persons, relations), [persons, relations]);
 
-    const [relationDialog, setRelationDialog] = useState(null); // { source, target }
+    const handleNodeClick = (node, event) => {
+        if (draggingNode) return;
 
-    // Recalculate layout when data changes
-    const { nodes, links } = useMemo(() => {
-        return calculateLayout(persons, relations);
-    }, [persons, relations]);
-
-    // Convert screen to tree coordinates
-    const toTreeCoords = (clientX, clientY) => {
-        return {
-            x: (clientX - view.x) / view.zoom,
-            y: (clientY - view.y) / view.zoom
-        };
+        const rect = svgRef.current.getBoundingClientRect();
+        setContextMenuPos({
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top
+        });
+        setSelectedPerson(node);
+        setShowContextMenu(true);
     };
 
-    const handleMouseDown = (e) => {
-        // Only pan if not clicking a node (handled in node)
-        if (e.target.closest('.tree-node')) return;
+    const handleDelete = async () => {
+        if (!confirm(`${selectedPerson.firstName} ${selectedPerson.lastName} wirklich löschen?`)) {
+            setShowContextMenu(false);
+            return;
+        }
 
-        setIsPanning(true);
-        setPanStart({ x: e.clientX - view.x, y: e.clientY - view.y });
+        try {
+            await deletePerson(selectedPerson.id);
+            setShowContextMenu(false);
+        } catch (err) {
+            alert('Fehler beim Löschen: ' + err.message);
+        }
     };
 
     const handleNodeMouseDown = (e, node) => {
         e.stopPropagation();
         setDraggingNode(node);
-        const coords = toTreeCoords(e.clientX, e.clientY);
-        setDragPos(coords);
+        setDragPos({ x: node.x, y: node.y });
+        setShowContextMenu(false);
     };
 
     const handleMouseMove = (e) => {
+        if (!svgRef.current) return;
+
         if (isPanning) {
-            setView(prev => ({
+            setTransform(prev => ({
                 ...prev,
                 x: e.clientX - panStart.x,
                 y: e.clientY - panStart.y
             }));
         } else if (draggingNode) {
-            const coords = toTreeCoords(e.clientX, e.clientY);
-            setDragPos(coords);
+            const rect = svgRef.current.getBoundingClientRect();
+            const x = (e.clientX - rect.left - transform.x) / transform.scale;
+            const y = (e.clientY - rect.top - transform.y) / transform.scale;
+            setDragPos({ x, y });
 
-            // Check for hover
-            // Simple distance check or elementFromPoint could work, but elementFromPoint is easier
-            // We need to temporarily hide the dragged element or ignore it, but since we are drawing a line, 
-            // we can just check proximity to other nodes in 'nodes' array
-            const threshold = 100; // Distance to snap
-            const target = nodes.find(n =>
+            const target = layout.nodes.find(n =>
                 n.id !== draggingNode.id &&
-                Math.abs(n.x - coords.x) < 80 &&
-                Math.abs(n.y - coords.y) < 50
+                Math.abs(n.x - x) < 80 &&
+                Math.abs(n.y - y) < 50
             );
             setHoveredNode(target || null);
         }
@@ -75,8 +83,8 @@ export default function TreeRenderer() {
 
     const handleMouseUp = () => {
         if (draggingNode && hoveredNode) {
-            // Open dialog
-            setRelationDialog({ source: draggingNode, target: hoveredNode });
+            setSelectedRelation({ source: draggingNode, target: hoveredNode });
+            setShowRelationDialog(true);
         }
 
         setIsPanning(false);
@@ -85,30 +93,38 @@ export default function TreeRenderer() {
         setHoveredNode(null);
     };
 
+    const handleMouseDown = (e) => {
+        if (e.target.closest('.tree-node')) return;
+        setShowContextMenu(false);
+        setIsPanning(true);
+        setPanStart({ x: e.clientX - transform.x, y: e.clientY - transform.y });
+    };
+
     const handleWheel = (e) => {
         e.preventDefault();
         const scale = e.deltaY > 0 ? 0.9 : 1.1;
-        setView(prev => ({ ...prev, zoom: prev.zoom * scale }));
+        setTransform(prev => ({ ...prev, scale: prev.scale * scale }));
     };
 
     const handleRelationConfirm = async (type, subType) => {
-        if (!relationDialog) return;
+        if (!selectedRelation) return;
         try {
             await addRelation({
-                person1Id: relationDialog.source.id,
-                person2Id: relationDialog.target.id,
+                person1Id: selectedRelation.source.id,
+                person2Id: selectedRelation.target.id,
                 type,
                 subType
             });
+            setShowRelationDialog(false);
         } catch (err) {
             alert(err.message);
         }
-        setRelationDialog(null);
     };
 
     return (
         <div className="tree-container">
             <svg
+                ref={svgRef}
                 className="tree-canvas"
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
@@ -116,12 +132,11 @@ export default function TreeRenderer() {
                 onMouseLeave={handleMouseUp}
                 onWheel={handleWheel}
             >
-                <g transform={`translate(${view.x}, ${view.y}) scale(${view.zoom})`}>
-                    {links.map(link => (
-                        <TreeConnection key={link.id} link={link} nodes={nodes} />
+                <g transform={`translate(${transform.x}, ${transform.y}) scale(${transform.scale})`}>
+                    {layout.connections.map((conn, i) => (
+                        <TreeConnection key={i} connection={conn} />
                     ))}
 
-                    {/* Drag Line */}
                     {draggingNode && dragPos && (
                         <line
                             x1={draggingNode.x} y1={draggingNode.y}
@@ -130,11 +145,11 @@ export default function TreeRenderer() {
                         />
                     )}
 
-                    {nodes.map(node => (
+                    {layout.nodes.map(node => (
                         <TreeNode
                             key={node.id}
                             node={node}
-                            onClick={(n) => console.log('Clicked', n)}
+                            onClick={(n, e) => handleNodeClick(n, e)}
                             onMouseDown={(e) => handleNodeMouseDown(e, node)}
                             isHovered={hoveredNode?.id === node.id}
                         />
@@ -142,17 +157,32 @@ export default function TreeRenderer() {
                 </g>
             </svg>
 
-            <div className="zoom-controls">
-                <button onClick={() => setView(v => ({ ...v, zoom: v.zoom * 1.2 }))}>+</button>
-                <button onClick={() => setView(v => ({ ...v, zoom: v.zoom / 1.2 }))}>-</button>
-                <button onClick={() => setView(v => ({ ...v, x: window.innerWidth / 2, y: 100, zoom: 1 }))}>Reset</button>
-            </div>
+            {showContextMenu && (
+                <div
+                    className="context-menu"
+                    style={{
+                        position: 'absolute',
+                        left: contextMenuPos.x,
+                        top: contextMenuPos.y,
+                        background: 'white',
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                        padding: '5px 0',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                        zIndex: 1000
+                    }}
+                >
+                    <button onClick={handleDelete} style={{ display: 'block', width: '100%', padding: '8px 16px', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer' }}>
+                        Löschen
+                    </button>
+                </div>
+            )}
 
-            {relationDialog && (
+            {showRelationDialog && (
                 <RelationDialog
-                    sourcePerson={relationDialog.source}
-                    targetPerson={relationDialog.target}
-                    onClose={() => setRelationDialog(null)}
+                    sourcePerson={selectedRelation.source}
+                    targetPerson={selectedRelation.target}
+                    onClose={() => setShowRelationDialog(false)}
                     onConfirm={handleRelationConfirm}
                 />
             )}
