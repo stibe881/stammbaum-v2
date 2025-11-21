@@ -137,21 +137,6 @@ export default function TreeRenderer() {
 
         setIsPanning(false);
         setDraggingNode(null);
-        setDragPos(null);
-        setHoveredNode(null);
-        isDraggingRef.current = false; // Reset drag flag
-    };
-
-    const handleMouseDown = (e) => {
-        // Don't start panning if node drag just started
-        if (isDraggingRef.current) return;
-
-        setShowContextMenu(false);
-        setIsPanning(true);
-        setPanStart({ x: e.clientX - transform.x, y: e.clientY - transform.y });
-    };
-
-    const handleWheel = (e) => {
         const scale = e.deltaY > 0 ? 0.9 : 1.1;
         setTransform(prev => ({ ...prev, scale: prev.scale * scale }));
     };
