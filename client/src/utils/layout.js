@@ -1,15 +1,16 @@
-/**
- * Improved tree layout with partner grouping
- */
+// utils/layout.js
+// Calculates node positions for the family tree, grouping partners side‑by‑side.
 export const calculateLayout = (persons, relations) => {
+    // Initialise nodes with placeholder coordinates
     const nodes = persons.map(p => ({ ...p, x: 0, y: 0 }));
     const links = relations.map(r => ({ ...r }));
 
-    // Find roots - people with no parents
-    const childIds = new Set(relations.filter(r => r.type === 'parent_child').map(r => r.person2Id));
+    // ---------- Determine generation levels ----------
+    const childIds = new Set(
+        relations.filter(r => r.type === 'parent_child').map(r => r.person2Id)
+    );
     const roots = nodes.filter(n => !childIds.has(n.id));
 
-    // Assign levels (generations)
     const levels = {};
     const queue = roots.map(r => ({ id: r.id, level: 0 }));
     const visited = new Set();
@@ -20,105 +21,100 @@ export const calculateLayout = (persons, relations) => {
         visited.add(id);
         levels[id] = level;
 
-        // Find children
-        const childrenRels = relations.filter(r => r.type === 'parent_child' && r.person1Id === id);
-        childrenRels.forEach(r => {
-            queue.push({ id: r.person2Id, level: level + 1 });
-        });
+        // children
+        relations
+            .filter(r => r.type === 'parent_child' && r.person1Id === id)
+            .forEach(r => queue.push({ id: r.person2Id, level: level + 1 }));
 
-        // Find partners (same level)
-        const partnerRels = relations.filter(r => r.type === 'partner' && (r.person1Id === id || r.person2Id === id));
-        partnerRels.forEach(r => {
-            const partnerId = r.person1Id === id ? r.person2Id : r.person1Id;
-            if (!visited.has(partnerId)) {
-                queue.push({ id: partnerId, level: level });
-            }
-        });
+        // partners on same level
+        relations
+            .filter(
+                r =>
+                    r.type === 'partner' &&
+                    (r.person1Id === id || r.person2Id === id)
+            )
+            .forEach(r => {
+                const partnerId = r.person1Id === id ? r.person2Id : r.person1Id;
+                if (!visited.has(partnerId)) {
+                    queue.push({ id: partnerId, level });
+                }
+            });
     }
 
-    // Handle disconnected nodes
+    // Ensure every node has a level (isolated nodes)
     nodes.forEach(n => {
         if (levels[n.id] === undefined) levels[n.id] = 0;
     });
 
-    // Group partners together
+    // ---------- Build partner groups (only when on same level) ----------
     const partnerGroups = [];
-    const usedNodes = new Set();
-
-    relations.filter(r => r.type === 'partner').forEach(rel => {
-        if (!usedNodes.has(rel.person1Id) && !usedNodes.has(rel.person2Id)) {
-            const person1 = nodes.find(n => n.id === rel.person1Id);
-            const person2 = nodes.find(n => n.id === rel.person2Id);
-            if (person1 && person2 && levels[person1.id] === levels[person2.id]) {
-                partnerGroups.push([person1.id, person2.id]);
-                usedNodes.add(person1.id);
-                usedNodes.add(person2.id);
+    const used = new Set();
+    relations
+        .filter(r => r.type === 'partner')
+        .forEach(r => {
+            if (used.has(r.person1Id) || used.has(r.person2Id)) return;
+            const p1 = nodes.find(n => n.id === r.person1Id);
+            const p2 = nodes.find(n => n.id === r.person2Id);
+            if (p1 && p2 && levels[p1.id] === levels[p2.id]) {
+                partnerGroups.push([p1.id, p2.id]);
+                used.add(p1.id);
+                used.add(p2.id);
             }
-        }
-    });
+        });
 
-    // Group by level
+    // ---------- Organise rows per level ----------
     const rows = {};
     nodes.forEach(n => {
         const lvl = levels[n.id];
         if (!rows[lvl]) rows[lvl] = [];
-
-        // Check if this node is part of a partner group
         const group = partnerGroups.find(g => g.includes(n.id));
-        if (group && !rows[lvl].some(item => Array.isArray(item) && item.some(id => group.includes(id)))) {
-            // Add the whole partner group
-            rows[lvl].push(group);
-        } else if (!group && !usedNodes.has(n.id)) {
-            // Add single node
+        if (group) {
+            // avoid duplicate insertion of the same group
+            if (!rows[lvl].some(item => Array.isArray(item) && item.includes(group[0]))) {
+                rows[lvl].push(group);
+            }
+        } else if (!used.has(n.id)) {
             rows[lvl].push([n.id]);
         }
     });
 
-    // Assign X and Y positions
+    // ---------- Position nodes ----------
     const LEVEL_HEIGHT = 200;
     const NODE_WIDTH = 160;
-    const PARTNER_SPACING = 180; // Spacing between partners
-    const GROUP_SPACING = 60; // Extra spacing between groups
+    const PARTNER_SPACING = 180; // distance between two partners
+    const GROUP_SPACING = 60; // extra space between groups
 
-    Object.keys(rows).forEach(lvl => {
-        const rowItems = rows[lvl];
-
-        // Calculate total width needed
+    Object.keys(rows).forEach(lvlStr => {
+        const lvl = Number(lvlStr);
+        const items = rows[lvl];
+        // total width needed for this row
         let totalWidth = 0;
-        rowItems.forEach(item => {
-            if (item.length === 2) {
-                // Partner pair
-                totalWidth += PARTNER_SPACING + NODE_WIDTH;
-            } else {
-                // Single person
-                totalWidth += NODE_WIDTH;
-            }
+        items.forEach(item => {
+            if (item.length === 2) totalWidth += NODE_WIDTH + PARTNER_SPACING;
+            else totalWidth += NODE_WIDTH;
             totalWidth += GROUP_SPACING;
         });
-
         let startX = -totalWidth / 2;
-
-        rowItems.forEach(item => {
+        items.forEach(item => {
             if (item.length === 2) {
-                // Partner pair - place side by side
-                const node1 = nodes.find(n => n.id === item[0]);
-                const node2 = nodes.find(n => n.id === item[1]);
-
-                node1.x = startX + NODE_WIDTH / 2;
-                node1.y = Number(lvl) * LEVEL_HEIGHT;
-
-                node2.x = startX + PARTNER_SPACING;
-                node2.y = Number(lvl) * LEVEL_HEIGHT;
-
-                startX += PARTNER_SPACING + NODE_WIDTH + GROUP_SPACING;
-            } else {
-                // Single person
-                const node = nodes.find(n => n.id === item[0]);
-                if (node) {
-                    node.x = startX + NODE_WIDTH / 2;
-                    node.y = Number(lvl) * LEVEL_HEIGHT;
-                    startX += NODE_WIDTH + GROUP_SPACING;
+                const [id1, id2] = item;
+                const n1 = nodes.find(n => n.id === id1);
+                const n2 = nodes.find(n => n.id === id2);
+                if (n1 && n2) {
+                    n1.x = startX + NODE_WIDTH / 2;
+                    n1.y = lvl * LEVEL_HEIGHT;
+                    n2.x = startX + NODE_WIDTH / 2 + PARTNER_SPACING;
+                    n2.y = lvl * LEVEL_HEIGHT;
                 }
+                startX += NODE_WIDTH + PARTNER_SPACING + GROUP_SPACING;
+            } else {
+                const [id] = item;
+                const n = nodes.find(node => node.id === id);
+                if (n) {
+                    n.x = startX + NODE_WIDTH / 2;
+                    n.y = lvl * LEVEL_HEIGHT;
+                }
+                startX += NODE_WIDTH + GROUP_SPACING;
             }
         });
     });
