@@ -1,7 +1,8 @@
 FROM node:18-alpine
+RUN apk add --no-cache netcat-openbsd
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-EXPOSE 3000
-CMD ["node", "index.js"]
+RUN chmod +x wait-for-db.sh
+CMD ["./wait-for-db.sh", "db", "node", "index.js"]
