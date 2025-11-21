@@ -23,6 +23,7 @@ export default function TreeRenderer() {
     const svgRef = useRef(null);
     const [isPanning, setIsPanning] = useState(false);
     const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+    const isDraggingRef = useRef(false); // Track if node drag is in progress
 
     const layout = useMemo(() => calculateLayout(persons, relations), [persons, relations]);
 
@@ -92,6 +93,7 @@ export default function TreeRenderer() {
 
     const handleNodeMouseDown = (e, node) => {
         e.stopPropagation();
+        isDraggingRef.current = true; // Mark that node drag started
         setDraggingNode(node);
         setDragPos({ x: node.x, y: node.y });
         setShowContextMenu(false);
@@ -137,10 +139,13 @@ export default function TreeRenderer() {
         setDraggingNode(null);
         setDragPos(null);
         setHoveredNode(null);
+        isDraggingRef.current = false; // Reset drag flag
     };
 
     const handleMouseDown = (e) => {
-        // stopPropagation() in den Node/Line-Handlern verhindert Background-Panning
+        // Don't start panning if node drag just started
+        if (isDraggingRef.current) return;
+
         setShowContextMenu(false);
         setIsPanning(true);
         setPanStart({ x: e.clientX - transform.x, y: e.clientY - transform.y });
