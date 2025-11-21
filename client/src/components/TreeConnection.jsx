@@ -1,7 +1,9 @@
+import React from 'react';
 import { useDesign } from '../context/DesignContext';
 
-export default function TreeConnection({ link, nodes }) {
+export default function TreeConnection({ link, nodes, onClick }) {
     const { lineStyle } = useDesign();
+    const [isHovered, setIsHovered] = React.useState(false);
     const source = nodes.find(n => n.id === link.person1Id);
     const target = nodes.find(n => n.id === link.person2Id);
 
@@ -20,9 +22,13 @@ export default function TreeConnection({ link, nodes }) {
             <line
                 x1={source.x + 75} y1={source.y}
                 x2={target.x - 75} y2={target.y}
-                stroke="var(--line-color)"
-                strokeWidth="2"
+                stroke={isHovered ? "#e74c3c" : "var(--line-color)"}
+                strokeWidth={isHovered ? "4" : "2"}
                 strokeDasharray="5,5"
+                onClick={(e) => onClick && onClick(e)}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                style={{ cursor: 'pointer' }}
             />
         );
     }
@@ -48,8 +54,12 @@ export default function TreeConnection({ link, nodes }) {
         <path
             d={d}
             fill="none"
-            stroke="var(--line-color)"
-            strokeWidth="2"
+            stroke={isHovered ? "#e74c3c" : "var(--line-color)"}
+            strokeWidth={isHovered ? "4" : "2"}
+            onClick={(e) => onClick && onClick(e)}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            style={{ cursor: 'pointer' }}
         />
     );
 }

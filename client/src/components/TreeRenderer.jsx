@@ -4,6 +4,7 @@ import { calculateLayout } from '../utils/layout';
 import TreeNode from './TreeNode';
 import TreeConnection from './TreeConnection';
 import RelationDialog from './RelationDialog';
+import { api } from '../services/api';
 import './TreeRenderer.css';
 
 export default function TreeRenderer() {
@@ -17,6 +18,7 @@ export default function TreeRenderer() {
     const [selectedPerson, setSelectedPerson] = useState(null);
     const [showContextMenu, setShowContextMenu] = useState(false);
     const [contextMenuPos, setContextMenuPos] = useState({ x: 0, y: 0 });
+    const [selectedLinkToDelete, setSelectedLinkToDelete] = useState(null);
 
     const svgRef = useRef(null);
     const [isPanning, setIsPanning] = useState(false);
@@ -45,6 +47,32 @@ export default function TreeRenderer() {
         try {
             await deletePerson(selectedPerson.id);
             setShowContextMenu(false);
+        } catch (err) {
+            alert('Fehler beim Löschen: ' + err.message);
+        }
+    };
+
+    const handleLineClick = (link, event) => {
+        event.stopPropagation();
+        const rect = svgRef.current.getBoundingClientRect();
+        setContextMenuPos({
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top
+        });
+        setSelectedLinkToDelete(link);
+        setSelectedPerson(null);
+        setShowContextMenu(true);
+    };
+
+    const handleDeleteRelation = async () => {
+        if (!confirm('Beziehung wirklich löschen?')) {
+            setShowContextMenu(false);
+            return;
+        }
+
+        try {
+            await api.deleteRelation(selectedLinkToDelete.id);
+            window.location.reload();
         } catch (err) {
             alert('Fehler beim Löschen: ' + err.message);
         }
@@ -140,7 +168,12 @@ export default function TreeRenderer() {
             >
                 <g transform={`translate(${transform.x}, ${transform.y}) scale(${transform.scale})`}>
                     {layout.links.map((link, i) => (
-                        <TreeConnection key={i} link={link} nodes={layout.nodes} />
+                        <TreeConnection
+                            key={i}
+                            link={link}
+                            nodes={layout.nodes}
+                            onClick={(e) => handleLineClick(link, e)}
+                        />
                     ))}
 
                     {draggingNode && dragPos && (
@@ -184,9 +217,16 @@ export default function TreeRenderer() {
                         zIndex: 1000
                     }}
                 >
-                    <button onClick={handleDelete} style={{ display: 'block', width: '100%', padding: '8px 16px', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer' }}>
-                        Löschen
-                    </button>
+                    {selectedPerson && (
+                        <button onClick={handleDelete} style={{ display: 'block', width: '100%', padding: '8px 16px', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer' }}>
+                            Person löschen
+                        </button>
+                    )}
+                    {selectedLinkToDelete && (
+                        <button onClick={handleDeleteRelation} style={{ display: 'block', width: '100%', padding: '8px 16px', border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer' }}>
+                            Beziehung löschen
+                        </button>
+                    )}
                 </div>
             )}
 
