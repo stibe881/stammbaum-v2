@@ -140,8 +140,7 @@ export default function TreeRenderer() {
     };
 
     const handleMouseDown = (e) => {
-        // Ignoriere wenn auf Node oder Line geklickt wurde
-        if (e.target.closest('.tree-node') || e.target.tagName === 'path' || e.target.tagName === 'line') return;
+        // stopPropagation() in den Node/Line-Handlern verhindert Background-Panning
         setShowContextMenu(false);
         setIsPanning(true);
         setPanStart({ x: e.clientX - transform.x, y: e.clientY - transform.y });
