@@ -25,7 +25,7 @@ export default function TreeNode({ node, onClick, onMouseDown, isHovered }) {
     return (
         <g
             transform={`translate(${node.x}, ${node.y})`}
-            onClick={() => onClick(node)}
+            onClick={(e) => onClick(node, e)}
             onMouseDown={onMouseDown}
             className={`tree-node ${isHovered ? 'is-hovered' : ''} ${isMatch ? 'is-match' : ''} style-${nodeStyle}`}
         >
